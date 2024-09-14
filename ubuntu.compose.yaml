@@ -1,0 +1,11 @@
+version: '3'
+services: 
+  ubuntu-container:
+    image: ubuntu
+    container-name: ubuntu-container
+    hostname: hamzahashmi
+    volumes: 
+     - /var/run/docker.sock:/var/run/docker.sock
+    tty: true   # Keeps the container running for interactive use
+    stdin_open: true   # Allows interactive commands inside the container
+  
