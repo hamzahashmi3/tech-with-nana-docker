@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  ubuntu-base:
+    build: .  # Build the custom image using the Dockerfile
+    container_name: ubuntu-base
+    hostname: hashmi-host
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - dev-network
+    tty: true
+
+  tech-with-nana:
+    image: ubuntu-base  # Reuse the custom image
+    container_name: tech-with-nana
+    hostname: tech-with-nana-host
+    environment:
+      - NODE_ENV=development
+    networks:
+      - mongo-network
+    tty: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    working_dir: /home/hamzahashmi/tech-with-nana
+    command: bash -c "apt-get update && apt-get install -y curl git && \
+              curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash - && \
+              apt-get install -y nodejs && git clone https://github.com/hamzahashmi3/tech-with-nana-docker.git && \
+              npm install /home/hamzahashmi/tech-with-nana-docker && \
+              npm start"
+
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    networks:
+      - mongo-network
+    ports:
+      - "27017:27017"
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    restart: always
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongodb
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+    networks:
+      - mongo-network
+    ports:
+      - "8081:8081"
+
+  kunal-devops:
+    image: ubuntu-base  # Reuse the custom image
+    container_name: kunal-devops
+    hostname: kunal-devops-host
+    networks:
+      - dev-network
+    tty: true
+    working_dir: /home/hamzahashmi/kunal-devops
+    command: bash -c "apt-get update && \
+              apt-get install -y curl apt-transport-https && \
+              curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - && \
+              apt-add-repository 'deb http://apt.kubernetes.io/ kubernetes-xenial main' && \
+              apt-get install -y kubectl kubeadm minikube"
+
+networks:
+  mongo-network:
+    driver: bridge
+  dev-network:
+    driver: bridge
